@@ -1,0 +1,12 @@
+add             ; Arithmetic
+
+add 50          ; Immediate dec
+ADD 0x50        ; Immediate hex
+aDD 0b001       ; Immediate bin
+
+whatTheFlip
+
+Add [123]       ; Immediate Address no offset
+aDd [456], 10   ; Immediate Address w/ offset
+
+add [789], x    ; Immediate Address (offset in x)
