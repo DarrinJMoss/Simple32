@@ -1,0 +1,8 @@
+Arithmetic Registers
+A, B
+
+General Use Registers
+X, Y
+
+Program Counter
+I, J

@@ -1,0 +1,28 @@
+OTHER RESOURCES:
+    https://docs.google.com/spreadsheets/d/1FPy_3vjqmcvCe56z15vXJdfcHArcoHG2hwpGE0Kw-NI/edit?usp=sharing
+
+INSTRUCTIONS:
+    LOGIC 1
+        NOP  b00_000_000 (No-Operation)
+            Does nothing
+        
+        AND  bzz_000_001 (Bitwise AND)
+            Stores the bitwise AND of two numbers in the A register
+        
+        OR   bzz_000_010 (Bitwise OR)
+            Stores the bitwise OR of two numbers in the A register
+        
+        XOR  bzz_000_011 (Bitwise Exclusive OR)
+            Stores the bitwise XOR of two numbers in the A register
+
+        NAND bzz_000_100 (Bitwise NAND)
+            Stores the bitwise NAND of two numbers in the A register
+
+        NOR  bzz_000_101 (Bitwise NOR)
+            Stores the bitwise NOR of two numbers in the A register
+
+        XNOR bzz_000_110 (Bitwise Exclusive NOR)
+            Stores the bitwise XNOR of two numbers in the A register
+
+        NOT  bzz_000_111 (Bitwise NOT)
+            Inverts all bits in one number and stores it in the A register

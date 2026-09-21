@@ -1,0 +1,98 @@
+Opcode Size: 8 bits.
+
+Leftmost  2 bits: Operation Info
+Middle    3 bits: Opcode Page
+Rightmost 3 bits: Operation
+
+
+
+OP INFO
+00: Arithmetic
+01: Immediate
+10: Immediate address
+11: Immediate address + offset (in X register)
+
+
+
+OPCODE PAGES
+
+XX000 - LOGIC 1
+000: nop
+001: AND
+010: OR
+011: XOR
+100: NAND
+101: NOR
+110: XNOR
+111: nop
+
+XX001 - LOGIC 2/APPROXIMATION
+000: ASR
+001: ASL
+010: LSR
+011: LSL
+100: TCMP (2's complement, inverting number)
+101: FLOR (Floor)
+110: CEIL (Ceiling)
+111: ROND (Round)
+
+XX010 - ARITHMETIC
+000: ADD
+001: SUB
+010: MUL
+011: DIV
+100: SQRT (?)
+101: INC
+110: DEC
+111: CMP (Compare)
+
+XX011 - MEMORY (ARITHMETIC)
+000: LDA [immediate]
+001: LDA [address]
+010: STA [address]
+011: LDB [immediate]
+100: LDB [address]
+101: STB [address]
+110: TAB
+111: TBA
+
+XX100 - MEMORY (GENERAL USE)
+000: LDX [immediate]
+001: LDX [address]
+010: STX [address]
+011: LDY [immediate]
+100: LDY [address]
+101: STY [address]
+110: TXY
+111: TYX
+
+XX101 - MEMORY (REMAINING TRANSFERS)
+000: TXA
+001: TXB
+010: TYA
+011: TYB
+100: TAX
+101: TAY
+110: TBX
+111: TBY
+
+XX110 - MEMORY (STACK)
+000: PUSH (Pushes A onto the stack)
+001: PUSH [immediate]
+010: POP  (Pops into the A register)
+011: ISP  (Increment stack pointer)
+100: DSP  (Decrement stack pointer)
+101: nop
+110: nop
+111: nop
+
+XX111 - CONTROL FLOW
+000: JMP [address]
+001: JEQ [address]
+010: JLE [address]
+011: JGR [address]
+100: JNE [address]
+100: CALL [immediate]
+101: RET
+110: nop
+111: nop

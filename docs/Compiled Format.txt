@@ -1,0 +1,14 @@
+Reset Vector (JMP_I [ADDRESS OF FIRST INSTRUCTION]) [5 bytes]:
+    0x70 [ADDRESS OF FIRST INSTRUCTION]
+
+Format Header (ASCII) [20 bytes]
+    'V32 COMPILED PROGRAM'
+
+Program Version [4 bytes]
+
+Read Only Data [n bytes]
+    Any data defined using .db or other instructions is placed here.
+
+Instructions [m bytes]
+    All actual code goes here
+
