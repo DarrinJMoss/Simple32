@@ -20,14 +20,14 @@ enum _CurrentIntScanType {
     Octal,
 }
 
-struct _TokenizerManager {
+struct _TokenizerManager<'a> {
     pub curColumn       : u32,
     pub curLine         : u32,
     pub curState        : _TokenizerStates,
     pub dbp             : bool,
     pub errHasOccurred  : bool,
 
-    _fileReference      : Box<[String]>,
+    _fileReference      : Box<[&'a str]>,
 
     _chrBuffer          : String,
 
@@ -35,15 +35,17 @@ struct _TokenizerManager {
 
     _curIntScanType      : _CurrentIntScanType,
 }
-impl _TokenizerManager {
-    pub const fn New(debugPrintingEn : bool, fileString : &mut String) -> _TokenizerManager {
+impl<'a> _TokenizerManager<'a> {
+    pub fn New(debugPrintingEn : bool, fileString : &'a str) -> _TokenizerManager {
         return _TokenizerManager { 
             curColumn               : 1, 
             curLine                 : 1, 
             errHasOccurred          : false,
             curState                : _TokenizerStates::Scanning, 
             dbp                     : debugPrintingEn,
-            _fileReference          : fileString.clone().lines().collect(),
+            _fileReference          : fileString
+                                        .lines()
+                                        .collect(),
             _poisonedTokenBuffer    : Vec::new(), // Uhh... we'll worry about performance later
             _chrBuffer              : String::new(),
             _curIntScanType         : _CurrentIntScanType::Decimal,
@@ -126,7 +128,7 @@ pub fn Tokenize(filename : String, debugPrints : bool) -> Result<Vec<V32Token>, 
 
     let fileStr : String = fileStrErrHandle.unwrap();
 
-    let mut manager : _TokenizerManager = _TokenizerManager::New(debugPrints);
+    let mut manager : _TokenizerManager = _TokenizerManager::New(debugPrints, &fileStr);
 
     for ch in fileStr.chars() {
         _TokenizerManager::UpdateLnCl(&mut manager, &ch);
