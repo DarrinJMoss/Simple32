@@ -1,6 +1,28 @@
 use core::fmt;
 
 
+
+
+/// Automatically generates a print statement for the token given the following inputs:
+/// 
+/// 1: isErr                (Boolean Literal)               => Changes the aesthetic from warnings to errors.
+/// 
+/// 2: message              (String format!() expression)   => The descriptive message of the error/warning.
+/// 
+/// 3: lineN                (Integer Identifier)            => The line number the token is found on.
+/// 
+/// 4: clmnN                (Integer Identifier)            => The column number the token is found on.
+/// 
+/// 5: chspan               (Integer Identifier)            => How many characters wide the token is.
+/// 
+/// 6: offendingLine        (String Identifier)             => The whole line the token occurs on.
+/// 
+/// 7: offendingLineAbove   (Optional<String> Identifier)   => The line above the offending line.
+/// 
+/// 8: offendingLineBelow   (Optional<String> Identifier)   => The line below the offending line.
+
+// Note: This probably should have been an inline function, but I wanted to take the oppertunity to learn
+//       rust macros.
 macro_rules! _FormatTokenDisplay {
     ($isErr:literal, $message:expr, $lineN:ident, $clmnN:ident, $chspan:ident, $offendingLine:ident, $offendingLineAbove:ident, $offendingLineBelow:ident) => {
         {
@@ -38,11 +60,16 @@ macro_rules! _FormatTokenDisplay {
     };
 }
 
+/// Trait implemented by the poisoned token and tokenizer warning enums, allowing them both to be printed.
 pub trait TokenNoticeDisplay {
     fn Display(&self, lineNum : &u32, columnNum : &u32, charspan : &u32, offendingline : &str, aboveOffendingLine : Option<&str>, belowOffendingLine : Option<&str>) -> ();
 }
 
-/// A data structure containing a token output alongside information regarding where the token is within the file
+
+
+
+
+/// A data structure containing a token output alongside information regarding where to locate the token within the file.
 pub struct V32Token {
     pub tokenResult         : V32TokenResult,
      
@@ -54,13 +81,24 @@ impl V32Token {
 
     pub fn DisplayMsg(&self, offendingLine : &str, offendingLineAbove : Option<&str>, offendingLineBelow : Option<&str>) {
         match &self.tokenResult {
-            V32TokenResult::Good { tkn : _ }                                => return,
-            V32TokenResult::Warning { tkn : _, warning } => warning.Display(&self.tokenLine, &self.tokenColumnStart, &self.tokenCharSpan, offendingLine, offendingLineAbove, offendingLineBelow),
-            V32TokenResult::Poisoned { tkn }                => tkn    .Display(&self.tokenLine, &self.tokenColumnStart, &self.tokenCharSpan, offendingLine, offendingLineAbove, offendingLineBelow),
+            V32TokenResult::Good { tkn : _ }                                        => return,
+            V32TokenResult::Warning { tkn : _, warnings } => {
+                for warning in warnings.iter() {
+                    warning.Display(&self.tokenLine, &self.tokenColumnStart, &self.tokenCharSpan, offendingLine, offendingLineAbove, offendingLineBelow)
+                }
+            },
+            V32TokenResult::Poisoned { tkn }                        => tkn    .Display(&self.tokenLine, &self.tokenColumnStart, &self.tokenCharSpan, offendingLine, offendingLineAbove, offendingLineBelow),
         }
     }
 
 }
+impl fmt::Display for V32Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.tokenResult.fmt(f)
+    }
+}
+
+
 
 
 /// Enum containing the results of a tokenizer buffer flush.
@@ -73,7 +111,7 @@ pub enum V32TokenResult {
     /// A valid token output with no warning messages.
     Good        { tkn : ValidToken },
     /// A valid token output with a warning message.
-    Warning     { tkn : ValidToken, warning : TokenizerWarning },
+    Warning     { tkn : ValidToken, warnings : Box<[TokenizerWarning]> },
     /// A bad token with an error message.
     Poisoned    { tkn : PoisonedToken },
 }
@@ -81,7 +119,7 @@ impl fmt::Display for V32TokenResult {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             V32TokenResult::Good        { tkn }                 => tkn.fmt(f),
-            V32TokenResult::Warning     { tkn, warning : _ }    => tkn.fmt(f),
+            V32TokenResult::Warning     { tkn, warnings : _ }   => tkn.fmt(f),
             V32TokenResult::Poisoned    { tkn }              => tkn.fmt(f),
         }
     }
@@ -90,7 +128,7 @@ impl fmt::Display for V32TokenResult {
 
 /// A valid token output from the V32 Tokenizer, contains info about the type of token and associated data 
 /// (I.e., integer ltierals have a field with the data value as an int, string ltierals and itentifiers have a string member, etc.).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ValidToken {
     Lit_Int {
         value : u32,
@@ -136,28 +174,36 @@ impl fmt::Display for ValidToken {
     }
 }
 
+
+
+
 /// A bad token whose result was born from an error in the system. Contains error information.
 #[derive(Debug)]
 pub enum PoisonedToken {
     /// Random alphabetic character found in the middle of a proviced string literal.
     /// 
     /// I.e.: 10000 => Fine | 0x50FF => Fine | 0b011001 => Fine | 65_535 => Fine | 123Hi!456 => BadIntegerLiteral_UnexpectedAlpha
-    BadIntegerLiteral_UnexpectedAlpha { value : String },
+    BadIntegerLiteral_UnexpectedAlpha { value : Option<String> },
 }
+
 impl fmt::Display for PoisonedToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PoisonedToken::BadIntegerLiteral_UnexpectedAlpha { value } => write!(f, "Poisoned Token! Type: BadIntegerLiteral_UnexpectedAlpha RawToken: {}", value),
+            PoisonedToken::BadIntegerLiteral_UnexpectedAlpha { value } => write!(f, "Poisoned Token! Type: BadIntegerLiteral_UnexpectedAlpha RawToken: {}", value.as_ref().expect("Program Err in tokens.rs | PoisonedToken::BadIntegerLiteral_UnexpectedAlpha::fmt | String internal not set on poisoned token.")),
         }
     }
 }
+
 impl TokenNoticeDisplay for PoisonedToken {
     fn Display(&self, lineNum : &u32, columnNum : &u32, charspan : &u32, offendingline : &str, aboveOffendingLine : Option<&str>, belowOffendingLine : Option<&str>) -> () {
         match &self {
-            PoisonedToken::BadIntegerLiteral_UnexpectedAlpha { value } => _FormatTokenDisplay!(true, format!("Unexpected alphabetic character in integer literal.\n\tToken: {}", value), lineNum, columnNum, charspan, offendingline, aboveOffendingLine, belowOffendingLine),
+            PoisonedToken::BadIntegerLiteral_UnexpectedAlpha { value } => _FormatTokenDisplay!(true, format!("Unexpected alphabetic character in integer literal.\n\tToken: {}", value.as_ref().expect("Program Err in tokens.rs | PoisonedToken::BadIntegerLiteral_UnexpectedAlpha::Display | String internal not set on poisoned token.")), lineNum, columnNum, charspan, offendingline, aboveOffendingLine, belowOffendingLine),
         }
     }
 }
+
+
+
 
 /// A warning message the tokenizer generated when parsing the associated token.
 #[derive(Debug)]

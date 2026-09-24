@@ -1,7 +1,7 @@
 
 use std::fs;
 
-use crate::tokenizer::tokens::{PoisonedToken, V32Token};
+use crate::tokenizer::tokens::{PoisonedToken, TokenizerWarning, V32Token, ValidToken};
 
 enum _TokenizerStates {
     Scanning,
@@ -31,59 +31,101 @@ struct _TokenizerManager<'a> {
 
     _chrBuffer          : String,
 
-    _poisonedTokenBuffer: Vec<PoisonedToken>,
+    _curTokenType       : Option<ValidToken>,
+    _poisonedTokenStack : Vec<PoisonedToken>,
+    _warningStack       : Vec<TokenizerWarning>,
 
-    _curIntScanType      : _CurrentIntScanType,
+    _curIntScanType     : _CurrentIntScanType,
 }
 impl<'a> _TokenizerManager<'a> {
-    pub fn New(debugPrintingEn : bool, fileString : &'a str) -> _TokenizerManager {
+    pub fn New(debugPrintingEn : bool, fileString : &'a str) -> _TokenizerManager<'a> {
         return _TokenizerManager { 
             curColumn               : 1, 
             curLine                 : 1, 
-            errHasOccurred          : false,
+
             curState                : _TokenizerStates::Scanning, 
+            
+            errHasOccurred          : false,
             dbp                     : debugPrintingEn,
-            _fileReference          : fileString
-                                        .lines()
-                                        .collect(),
-            _poisonedTokenBuffer    : Vec::new(), // Uhh... we'll worry about performance later
+            
+            // Splits the input file into lines and collects them into a slice
+            _fileReference          : fileString.lines().collect(),
+
             _chrBuffer              : String::new(),
+            _curTokenType           : None,
+
             _curIntScanType         : _CurrentIntScanType::Decimal,
+
+            _warningStack           : Vec::with_capacity(8),
+            _poisonedTokenStack     : Vec::with_capacity(8),
         };
     }
 
-    pub const fn UpdateLnCl(man : &mut _TokenizerManager, input: &char) {
-        man.curColumn += 1;
+    #[inline]
+    pub fn UpdateLinesAndColumns(&mut self, input: &char) {
+        self.curColumn += 1;
         if *input == '\n' {
-            man.curColumn = 1;
-            man.curLine += 1;
+            self.curColumn = 1;
+            self.curLine += 1;
         }
     }
 
-    pub fn FlushBuffers(&mut self) -> Option<V32Token> {
+
+    pub fn FlushBuffers(&mut self) -> Option<Box<[V32Token]>> {
+        if self._chrBuffer.trim().is_empty()    { 
+            self._warningStack      .clear();
+            self._poisonedTokenStack.clear();
+            self._chrBuffer         .clear();
+
+            return None; 
+        }
+
+        if !self._poisonedTokenStack.is_empty() {
+
+        }
+        else {
+
+            let tokenSetup : ValidToken = self._curTokenType.as_ref().expect("Write error later").clone();
+
+        }
+
+        self._warningStack      .clear();
+        self._poisonedTokenStack.clear();
+        self._chrBuffer         .clear();
+        
         todo!();
     }
+
 
     pub fn HandleInput(&mut self, ch : &char) {
         if self.dbp { print!("Input char [{}] => ", ch.escape_default()) }
         match self.curState {
+
             _TokenizerStates::Scanning => {
                 if self.dbp { print!("Scanning... ") }
+
                 if *ch == '0' {
                     if self.dbp { print!("Leading zero found, detecting type of integer literal.") }
                     self.curState = _TokenizerStates::Read_IntFmtHeader;
                     self._chrBuffer.push(ch.clone());
                 }
+
             },
+
             _TokenizerStates::Read_Identifier => todo!(),
+
             _TokenizerStates::Read_StrLiteral => todo!(),
+
             _TokenizerStates::Read_IntFmtHeader => {
                 if self.dbp { print!("Detecting integer literal format header... ") }
 
+                self._curTokenType = Some(ValidToken::Lit_Int { value: 0 });
+
                 if          ch.to_ascii_lowercase() == 'x' {
                     if self.dbp { print!("Hexidecimal.") }
-                    self._curIntScanType = _CurrentIntScanType::Hex;
-                    self._chrBuffer.clear();
+                    self._curIntScanType = _CurrentIntScanType::Hex;    // Update the type of integer we're scanning
+                    self._chrBuffer.clear();                            // We need to clear the char buffer since the format specifier has nothing to to do with the number.
+                    // Same logic for the rest of the lines
                 }
                 else if     ch.to_ascii_lowercase() == 'b' {
                     if self.dbp { print!("Binary.") }
@@ -103,9 +145,11 @@ impl<'a> _TokenizerManager<'a> {
                 else if     ch.is_numeric() {
                     if self.dbp { print!("No integer format given, assuming redundant leading zero.") }
                     self._curIntScanType = _CurrentIntScanType::Decimal;
+                    self._warningStack.push(TokenizerWarning::IntLit_UnnecessaryLeadingZero);
                 }
                 else {
-                    
+                    if self.dbp { print!("Unexpected alphabetic character encountered in integer literal.") }
+                    self._poisonedTokenStack.push(PoisonedToken::BadIntegerLiteral_UnexpectedAlpha { value: None });
                 }
             },
             _TokenizerStates::Read_IntLit => todo!()
@@ -131,7 +175,7 @@ pub fn Tokenize(filename : String, debugPrints : bool) -> Result<Vec<V32Token>, 
     let mut manager : _TokenizerManager = _TokenizerManager::New(debugPrints, &fileStr);
 
     for ch in fileStr.chars() {
-        _TokenizerManager::UpdateLnCl(&mut manager, &ch);
+        _TokenizerManager::UpdateLinesAndColumns(&mut manager, &ch);
 
         if ch.is_whitespace() {
             let potentialToken : Option<V32Token> = manager.FlushBuffers();
