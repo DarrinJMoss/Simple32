@@ -1,5 +1,7 @@
 `timescale 1ps/1ps
 
+// WARNING: This file is outdated and will be remade from the ground up.
+
 module CPU #(
     parameter PROM_SIZE = 65535 * 4,
     parameter RAM_SIZE  = 65535,
