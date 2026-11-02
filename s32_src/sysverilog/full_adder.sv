@@ -18,7 +18,7 @@ endmodule
 // Full-adder for n bits.
 module FullAdder_Nbit #(
     // Use 8 by default to test adder functionality
-    parameter int unsigned          BIT_N = 8
+    parameter int unsigned          BIT_N = 4
 ) (
     // INPUT ***************************************
     input   logic [BIT_N - 1 : 0]   addend_a,  
@@ -30,7 +30,10 @@ module FullAdder_Nbit #(
     output  logic [BIT_N - 1 : 0]   result_o,
     
     output  logic                   flag_carry_o,
-    output  logic                   flag_overflow_o
+    output  logic                   flag_overflow_o,
+
+    output  logic [BIT_N - 1 : 0]   DEBUG_CARRYS,
+    output  logic [BIT_N - 1 : 0]   DEBUG_RESULT
 );
     // We need to store these in an intermediate state to do some flag evaluations once the addition is finished
     logic [BIT_N - 1 : 0] carry_register;
@@ -72,5 +75,7 @@ module FullAdder_Nbit #(
     assign flag_carry_o     = carry_register[BIT_N - 1];
 
     assign result_o = result_register;
+
+    assign DEBUG_CARRYS = carry_register; assign DEBUG_RESULT = result_register;
     
 endmodule
