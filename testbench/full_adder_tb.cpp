@@ -12,11 +12,6 @@
 #define BIT_CNT 4
 constexpr int32_t BIT_SIZE = (0b1 << (BIT_CNT));
 
-// Perhaps the worst line of code I've ever written, detects if an N bit number is negative or not, 
-// and if so, converts it to its u32 equivalent. There's probably an easier way to do this, but I
-// had fun writing this so shut up
-#define SIGNED(num) (( ( (BIT_SIZE>>1) & num) >> (BIT_CNT - 1) == 1) ? num | ((int32_t)-1 << BIT_CNT) : num)
-
 int main(int argc, char** argv)
 {
     Verilated::commandArgs(argc, argv);
@@ -45,7 +40,7 @@ int main(int argc, char** argv)
     }
 
     fprintf(fptr, "ADDITION:\n");
-    fprintf(fptr, "LHS,RHS,Result,Carry,Overflow,Bin Carry,Bin Result\n");
+    fprintf(fptr, "LHS,RHS,Result,Carry,Overflow,Bin LHS,Bin RHS,Bin Result\n");
     adder->do_subtraction = 0;
     unsigned int t = 0;
     for (int32_t a_i = 0; a_i < BIT_SIZE; a_i++) {
@@ -63,8 +58,9 @@ int main(int argc, char** argv)
                 adder->flag_carry_o,
                 adder->flag_overflow_o
             );
-            fprintf_binary(fptr, adder->DEBUG_CARRYS, BIT_CNT, ",");
-            fprintf_binary(fptr, adder->DEBUG_RESULT, BIT_CNT, "\n");
+            fprintf_binary(fptr, adder->addend_a, BIT_CNT, ",");
+            fprintf_binary(fptr, adder->addend_b, BIT_CNT, ",");
+            fprintf_binary(fptr, adder->result_o, BIT_CNT, "\n");
 
             tfp->dump(t);
             t++;
@@ -75,7 +71,7 @@ int main(int argc, char** argv)
     printf("\n\n");
 
     fprintf(fptr, "SUBTRACTION:\n");
-    fprintf(fptr, "LHS,RHS,Result,Carry,Overflow,Bin Carry,Bin Result\n");
+    fprintf(fptr, "LHS,RHS,Result,Carry,Overflow,Bin LHS,Bin RHS,Bin Result\n");
     adder->do_subtraction = 1;
     for (int32_t a_i = 0; a_i < BIT_SIZE; a_i++) {
         for (int32_t b_i = 0; b_i < BIT_SIZE; b_i++) {
@@ -83,17 +79,18 @@ int main(int argc, char** argv)
             adder->addend_b = b_i;
             adder->eval();
 
-            printf("%d - %d = %d\n", SIGNED(adder->addend_a), SIGNED(adder->addend_b), SIGNED(adder->result_o));
+            printf("%d - %d = %d\n", SIGNED(adder->addend_a, BIT_CNT), SIGNED(adder->addend_b, BIT_CNT), SIGNED(adder->result_o, BIT_CNT));
 
             fprintf(fptr, "%d,%d,%d,%u,%u,", 
-                SIGNED(adder->addend_a), 
-                SIGNED(adder->addend_b), 
-                SIGNED(adder->result_o), 
+                SIGNED(adder->addend_a, BIT_CNT), 
+                SIGNED(adder->addend_b, BIT_CNT), 
+                SIGNED(adder->result_o, BIT_CNT), 
                 adder->flag_carry_o,
                 adder->flag_overflow_o
             );
-            fprintf_binary(fptr, adder->DEBUG_CARRYS, BIT_CNT, ",");
-            fprintf_binary(fptr, adder->DEBUG_RESULT, BIT_CNT, "\n");
+            fprintf_binary(fptr, adder->addend_a, BIT_CNT, ",");
+            fprintf_binary(fptr, adder->addend_b, BIT_CNT, ",");
+            fprintf_binary(fptr, adder->result_o, BIT_CNT, "\n");
 
             tfp->dump(t);
             t++;

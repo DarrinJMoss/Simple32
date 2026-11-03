@@ -5,19 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-2
+
+### Added
+
+- Macros `CAST_TO_BIN64` and `CAST_TO_BIN32` which convert any input
+  variable to binary for processing by `fprintf_binary`.
+  ```
+  Ex:
+  float myfloat = 31.4f;
+  fprintf_binary(stdout, CAST_TO_BIN32(myfloat), 32, NULL);
+  OUTPUT: 01000001111110110011001100110011
+  ```
+- Documentation for the function `fprintf_binary` and macros `CAST_TO_BIN64`
+  and `CAST_TO_BIN32`.
+
+### Changed
+
+- Removed the debug outputs from `full_adder.sv`.
+- Removed hooks for the above debug outputs from `full_adder_tb.cpp`.
+- Updated the changelog to better utilize sections.
+- Modified `fprintf_binary` to lead with the MSB instead of the LSB.
+- Moved `SIGNED` to `s32tb_utils.h` and added a massive explanation of how it
+  works due to it being rather complex.
+- Updated `full_adder_tb.cpp` to utilize the new `SIGNED` macro.
+- Updated `README.md` to actually have stuff to read.
+
+### Removed
+
+- `full_adder_tb.csv`, a file in the root that was supposed to be removed
+  before the last commit, however the developer forgot.
+
 ## [0.2.2] - 2026-11-2
 
 ### Added
 
-- Added helper functions for testbenches in `s322tb_utils.h`
+- Added `fprintf_binary` to `s322tb_utils.h`, a function that prints out an
+  integer in its binary form.
+- Added `SIGNED` macro to expand a small signed number to a 32 bit one for
+  processing.
 
 ### Changed
 
-- Changed the testbench to print to a file as opposed to stdout
-- Changed the print target of the full adder testbench to target a CSV file
-- Fixed the testbench to work properly now.
-- - Modified the subtraction section to now display arbitrary signed numbers
-    correctly (check the SIGNED() macro)
+- Changed the testbench to print to a CSV file as opposed to stdout
+
+### Fixed
+
+- The subtraction testbench display, which now uses the afformentioned `SIGNED()`
+  macro.
 
 ## [0.2.1] - 2026-10-22
 
@@ -36,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Makefile to facilitate running different protocols.
 - Testbenches for the full_adder
 
-### Changed
+### Fixed
 
 - Fixed an issue with the ALU regarding the behavior of carry and overflow
   flags on non-arithmetic operations.
