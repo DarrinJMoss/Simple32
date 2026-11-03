@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-3
+
+### Added
+
+- Folder in `docs/` for internal documentation.
+- Updated the `README.md` to have links to other documents as opposed to
+  directly embedding them in the file.
+
+### Changed
+
+- Moved `s32_asm_reference.md` from root to `docs/` and renamed it to
+  `S32 Documentation.md`
+- Moved some internal documentation (`Compiled Format.txt`) to a dedicated
+  folder in `docs/`
+- Moved the AI Statement from `README.md` to a seperate file.
+
+### Removed
+
+- Several outdated pieces of internal documentation (`opcodes.txt`, 
+  `registers.txt`, `V32 Assembly Reference`).
+
 ## [0.3.0] - 2026-11-2
 
 ### Added
